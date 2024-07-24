@@ -1,0 +1,128 @@
+<?php 
+    include("../conexao.php");
+
+    //Validation Session
+    if(!isset($_SESSION)){
+        session_start();
+
+        if(!isset($_SESSION['id'])){
+            die("<p>Faça seu <a href=\"../login.php\">login</a>.</p>");
+        }
+
+        $id = $_SESSION['id'];
+
+        $query = $mysqli->prepare("SELECT * FROM users WHERE id=?") or die($mysqli->error);
+        $query->bind_param("s", $id);
+        $query->execute();
+        $stmt = $query->get_result();
+
+        $user = $stmt->fetch_assoc();
+    }
+
+    if(isset($_FILES['file'])){
+        
+        $file = $_FILES['file'];
+
+        //If occur any error
+        if($file['error']){
+            die("<p>Erro ao enviar arquivo. <a href=\"index.php\">Tente novamente</a>.</p>");
+        }
+
+        //If file is too big
+        if($file['size'] > 2097152){
+            die("<p>O arquivo excede 2MB, <a href=\"index.php\">escolha um outro arquivo</a>.</p>");
+        }
+
+        //Folder where files will be saved
+        $folder = "files/";
+
+        $original_name = $file['name'];
+        $random_name = uniqid();
+
+        $extension = strtolower(pathinfo($original_name, PATHINFO_EXTENSION));
+
+        if($extension != "jpg" && $extension != "png" && $extension != "jpeg" && $extension != "zip" && $extension != "pdf"){
+            die("<p>Extensão de arquivo não permitida.</p>");
+        }
+
+        $path = $folder . $random_name . "." . $extension;
+
+        $tmp = move_uploaded_file($file['tmp_name'], $path);
+
+        if($tmp){
+            $client = $user['name'];
+            $email = $user['email'];
+            $now = currentDate();
+            $query = $mysqli->prepare("INSERT INTO files (original_name, random_name, path, user, email, date) VALUES (?, ?, ?, ?, ?, ?)") or die($mysqli->error);
+            $query->bind_param("ssssss", $original_name, $random_name, $path, $client, $email, $now);
+            $query->execute();
+
+            if($query){
+                echo "<p>Arquivo enviado com êxito!</p>";
+            }
+        }
+    }
+?>
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Site</title>
+</head>
+<body>
+    <header>
+        <h1>Bem-vindo <?=$user['name'];?></h1>
+        <nav><a href="logout.php">Finalizar Sessão</a></nav><hr><br>
+    </header>
+    <main>
+        <h2>Envie um novo arquivo</h2>
+        <form enctype="multipart/form-data" action="" method="post">
+            <p>
+                <label for="file"><input type="file" name="file"></label>
+            </p>
+            <p>
+                <button type="submit">Enviar</button>
+            </p>
+        </form>
+        <?php 
+            $client = $user['name'];
+            $email = $user['email'];
+            $query = $mysqli->prepare("SELECT * FROM files WHERE user=? AND email=?") or die($mysqli->error);
+            $query->bind_param("ss", $client, $email);
+            $query->execute();
+            $stmt = $query->get_result();
+        ?>
+        <h2>Arquivos Enviados por você</h2>
+        <table cellpadding="5" border="1">
+            <thead>
+                <tr>
+                    <td><strong>Nome</strong></td>
+                    <td><strong>Data de Envio</strong></td>
+                    <td><strong><a href="delete.php">Excluir Tudo</a></strong></td>
+                </tr>
+            </thead>
+            <tbody>
+                <?php 
+                    while($file = $stmt->fetch_assoc()){
+                ?>
+                <tr>
+                    <td><?=$file['original_name']; ?></td>
+                    <td><?=formatDate($file['date']); ?></td>
+                    <td>
+                        <p>
+                            <button><a href="<?=$file['path']; ?>" download="<?=$file['random_name']; ?>">Baixar</a></button></p>
+                        </p>
+                        <p>
+                            <button><a href="deleteit.php?id=<?=$file['id']; ?>">Excluir</a></button>
+                        </p>
+                    </td>
+                </tr>
+                <?php 
+                    }
+                ?>
+            </tbody>
+        </table>
+    </main>
+</body>
+</html>
