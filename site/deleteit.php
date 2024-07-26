@@ -1,8 +1,6 @@
 <?php 
     include("../conexao.php");
 
-    $id = intval($_GET['id']);
-
     if(!isset($_SESSION)){
         session_start();
         
@@ -10,6 +8,9 @@
             die("<p>Faça seu <a href=\"../login.php\">login</a>.</p>");
         }
 
+        $id = intval($_GET['id']);
+
+        //Query from files
         $query = $mysqli->prepare("SELECT * FROM files WHERE id=?") or die($mysqli->error);
         $query->bind_param("i", $id);
         $query->execute();
@@ -18,10 +19,12 @@
 
         if(isset($_POST['yes'])){
 
+            //Deleting file path in database by id
             $deleting_file = $mysqli->prepare("DELETE FROM files WHERE id=?") or die($mysqli->error);
             $deleting_file->bind_param("i", $id);
             $deleting_file->execute();
 
+            //Deleting file from server
             unlink($file['path']);
 
             if($deleting_file){

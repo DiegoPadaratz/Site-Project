@@ -125,7 +125,7 @@
 </head>
 <body>
     <header>
-        <h1>Cadastre-se</h1>
+        <h1 class="titulo">Cadastre-se</h1>
         <small>
             <p>Já possuí cadastro? Faça seu <a href="login.php">login</a>.</p>
         </small>
@@ -133,27 +133,27 @@
     <main>
         <form action="" method="post">
             <p>
-                <label for="name">Nome </label><input type="text" name="name" value="<?php ?>"><span class="error"> *</span>
+                <label for="name">Nome </label><input type="text" name="name" value="<?php if(isset($_POST['name'])) echo $_POST['name']; ?>"><span class="error"> *</span>
             </p>
             <p>
-                <label for="surname">Sobrenome </label><input type="text" name="surname" value="<?php ?>"><span class="error"> *</span>
+                <label for="surname">Sobrenome </label><input type="text" name="surname" value="<?php if(isset($_POST['surname'])) echo $_POST['surname']; ?>"><span class="error"> *</span>
             </p>
             <p>
-                <label for="email">E-mail </label><input type="email" name="email" value="<?php ?>"><span class="error"> *</span>
+                <label for="email">E-mail </label><input type="email" name="email" value="<?php if(isset($_POST['email'])) echo $_POST['email']; ?>"><span class="error"> *</span>
             </p>
             <p>
-                <label for="birth">Data de nascimento </label><input type="date" name="birth" value="<?php ?>"><span class="error"> *</span>
+                <label for="birth">Data de nascimento </label><input type="date" name="birth" value="<?php if(isset($_POST['birth'])) echo $_POST['birth']; ?>"><span class="error"> *</span>
             </p>
             <p>
                 <label for="gender">Gênero </label><span class="error"> *</span>
-                <input type="radio" name="gender" value="Masculino"> Masculino
-                <input type="radio" name="gender" value="Feminino"> Feminino
+                <input type="radio" name="gender" value="Masculino" <?php if(isset($_POST['gender'])){ echo ($gender == "Masculino") ? 'checked' : ''; }?>> Masculino
+                <input type="radio" name="gender" value="Feminino" <?php if(isset($_POST['gender'])){ echo ($gender == "Feminino") ? 'checked' : ''; }?>> Feminino
             </p>
             <p>
-                <label for="password">Senha </label><input type="password" name="password" value="<?php ?>"><span class="error"> *</span>
+                <label for="password">Senha </label><input type="password" name="password" value="<?php if(isset($_POST['password'])) echo $_POST['password']; ?>"><span class="error"> *</span>
             </p>
             <p>
-                <label for="pass_confirm">Confirmar senha </label><input type="password" name="pass_confirm" value="<?php ?>"><span class="error"> *</span>
+                <label for="pass_confirm">Confirmar senha </label><input type="password" name="pass_confirm" value="<?php if(isset($_POST['pass_confirm'])) echo $_POST['pass_confirm']; ?>"><span class="error"> *</span>
             </p>
             <p>
                 <button type="submit">Cadastrar</button>

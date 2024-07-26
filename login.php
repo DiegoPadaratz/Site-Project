@@ -73,10 +73,10 @@
     <main>
         <form action="" method="post">
             <p>
-                <label for="email">E-mail </label><input type="email" name="email" value="<?php ?>"><span class="error"> *</span>
+                <label for="email">E-mail </label><input type="email" name="email" value="<?php if(isset($_POST['email'])) echo $_POST['email']; ?>"><span class="error"> *</span>
             </p>
             <p>
-                <label for="password">Senha </label><input type="password" name="password" value="<?php ?>"><span class="error"> *</span>
+                <label for="password">Senha </label><input type="password" name="password" value="<?php if(isset($_POST['password'])) echo $_POST['password']; ?>"><span class="error"> *</span>
             </p>
             <p>
                 <button type="submit">Cadastrar</button>

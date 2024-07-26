@@ -13,9 +13,6 @@
 
     //Function Format Name
     function formatName($string){
-        //Remove whitespace from string
-        $string =  preg_replace('/[^\w]/', '', $string);
-
         return preg_replace('/[\s\d,!?]/', '', $string);
     }
 
@@ -25,5 +22,9 @@
     }
 
     function formatDate($date){
-        return date("d/m/Y H:i", strtotime($date));
+        return date("d/m/Y", strtotime($date)) . " às " . date("H:i", strtotime($date));
+    }
+
+    function formatBirth($date){
+        return date("d/m/Y", strtotime($date));
     }

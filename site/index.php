@@ -8,58 +8,84 @@
         if(!isset($_SESSION['id'])){
             die("<p>Faça seu <a href=\"../login.php\">login</a>.</p>");
         }
+    }
 
         $id = $_SESSION['id'];
 
         $query = $mysqli->prepare("SELECT * FROM users WHERE id=?") or die($mysqli->error);
-        $query->bind_param("s", $id);
+        $query->bind_param("i", $id);
         $query->execute();
         $stmt = $query->get_result();
 
         $user = $stmt->fetch_assoc();
-    }
+
+        function sendFile($error, $size, $name, $tmp_name, $id){
+
+            include("../connection.php");
+
+            $query = $mysqli->prepare("SELECT * FROM users WHERE id=?") or die($mysqli->error);
+            $query->bind_param("i", $id);
+            $query->execute();
+            $stmt = $query->get_result();
+    
+            $user = $stmt->fetch_assoc();
+
+            //If occur any error
+            if($error){
+                die("<p>Erro ao enviar arquivo. <a href=\"index.php\">Tente novamente</a>.</p>");
+            }
+
+            //If file is too big
+            if($size > 2097152){
+                die("<p>O arquivo excede 2MB, <a href=\"index.php\">escolha um outro arquivo</a>.</p>");
+            }
+
+            //Folder where files will be saved
+            $folder = "files/";
+
+            $original_name = $name;
+            $random_name = uniqid();
+
+            $extension = strtolower(pathinfo($original_name, PATHINFO_EXTENSION));
+
+            if($extension != "jpg" && $extension != "png" && $extension != "jpeg" && $extension != "zip" && $extension != "pdf"){
+                die("<p>Extensão de arquivo não permitida.</p>");
+            }
+
+            $path = $folder . $random_name . "." . $extension;
+
+            $tmp = move_uploaded_file($tmp_name, $path);
+
+            if($tmp){
+                $client = $user['name'];
+                $email = $user['email'];
+                $now = currentDate();
+                $query = $mysqli->prepare("INSERT INTO files (original_name, random_name, path, user, email, date) VALUES (?, ?, ?, ?, ?, ?)") or die($mysqli->error);
+                $query->bind_param("ssssss", $original_name, $random_name, $path, $client, $email, $now);
+                $query->execute();
+
+                if($query){
+                    return true;
+                }
+            }
+        }
 
     if(isset($_FILES['file'])){
         
         $file = $_FILES['file'];
 
-        //If occur any error
-        if($file['error']){
-            die("<p>Erro ao enviar arquivo. <a href=\"index.php\">Tente novamente</a>.</p>");
-        }
+        $itswork = true;
 
-        //If file is too big
-        if($file['size'] > 2097152){
-            die("<p>O arquivo excede 2MB, <a href=\"index.php\">escolha um outro arquivo</a>.</p>");
-        }
-
-        //Folder where files will be saved
-        $folder = "files/";
-
-        $original_name = $file['name'];
-        $random_name = uniqid();
-
-        $extension = strtolower(pathinfo($original_name, PATHINFO_EXTENSION));
-
-        if($extension != "jpg" && $extension != "png" && $extension != "jpeg" && $extension != "zip" && $extension != "pdf"){
-            die("<p>Extensão de arquivo não permitida.</p>");
-        }
-
-        $path = $folder . $random_name . "." . $extension;
-
-        $tmp = move_uploaded_file($file['tmp_name'], $path);
-
-        if($tmp){
-            $client = $user['name'];
-            $email = $user['email'];
-            $now = currentDate();
-            $query = $mysqli->prepare("INSERT INTO files (original_name, random_name, path, user, email, date) VALUES (?, ?, ?, ?, ?, ?)") or die($mysqli->error);
-            $query->bind_param("ssssss", $original_name, $random_name, $path, $client, $email, $now);
-            $query->execute();
-
-            if($query){
-                echo "<p>Arquivo enviado com êxito!</p>";
+        foreach($file['name'] as $index => $arq){
+            $everything_ok = sendFile($file['error'][$index], $file['size'][$index], $file['name'][$index], $file['tmp_name'][$index], $id);
+            if(!$everything_ok){
+                $itswork = false;
             }
+        }
+        if($everything_ok){
+            echo "<p>Arquivos enviados com sucesso!</p>";
+        }else{
+            echo "<p>Falha ao enviar arquivos.</p>";
         }
     }
 ?>
@@ -73,13 +99,13 @@
 <body>
     <header>
         <h1>Bem-vindo <?=$user['name'];?></h1>
-        <nav><a href="logout.php">Finalizar Sessão</a></nav><hr><br>
+        <nav><a href="logout.php">Finalizar Sessão</a> | <a href="delete-account.php">Excluir conta</a> | <a href="my-account.php">Conta</a></nav><hr><br>
     </header>
     <main>
         <h2>Envie um novo arquivo</h2>
         <form enctype="multipart/form-data" action="" method="post">
             <p>
-                <label for="file"><input type="file" name="file"></label>
+                <label for="file"><input multiple type="file" name="file[]"></label>
             </p>
             <p>
                 <button type="submit">Enviar</button>
@@ -99,7 +125,7 @@
                 <tr>
                     <td><strong>Nome</strong></td>
                     <td><strong>Data de Envio</strong></td>
-                    <td><strong><a href="delete.php">Excluir Tudo</a></strong></td>
+                    <td><strong><button><a href="delete.php">Excluir Tudo</a></button></strong></td>
                 </tr>
             </thead>
             <tbody>
@@ -111,10 +137,8 @@
                     <td><?=formatDate($file['date']); ?></td>
                     <td>
                         <p>
-                            <button><a href="<?=$file['path']; ?>" download="<?=$file['random_name']; ?>">Baixar</a></button></p>
-                        </p>
-                        <p>
-                            <button><a href="deleteit.php?id=<?=$file['id']; ?>">Excluir</a></button>
+                            <button><a href="<?=$file['path']; ?>" download="<?=$file['random_name']; ?>">Baixar</a></button>
+                            <button><a href="deleteit.php?id=<?=$file['id']; ?>">Excluir</a></button><br>
                         </p>
                     </td>
                 </tr>

@@ -8,10 +8,8 @@
             die("<p>Faça seu <a href=\"../login.php\">login</a>.</p>");
         }
 
-        //Getting Session ID
         $id = $_SESSION['id'];
 
-        //If answear is "yes"
         if(isset($_POST['yes'])){
 
             //Query for users
